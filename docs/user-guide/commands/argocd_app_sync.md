@@ -48,7 +48,7 @@ argocd app sync [APPNAME... | -l selector | --project project-name] [flags]
       --retry-backoff-max-duration duration   Max retry backoff duration. Input needs to be a duration (e.g. 2m, 1h) (default 3m0s)
       --retry-limit int                       Max number of allowed sync retries
       --revision string                       Sync to a specific revision. Preserves parameter overrides
-  -l, --selector string                       Sync apps that match this label
+  -l, --selector string                       Sync apps that match this label. Supports '=', '==', '!=', in, notin, exists & not exists. Matching apps must satisfy all of the specified label constraints.
       --server-side                           Use server-side apply while syncing the application
       --strategy string                       Sync strategy (one of: apply|hook)
       --timeout uint                          Time out after this many seconds

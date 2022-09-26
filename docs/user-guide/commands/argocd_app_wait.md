@@ -27,7 +27,7 @@ argocd app wait [APPNAME.. | -l selector] [flags]
   -h, --help                   help for wait
       --operation              Wait for pending operations
       --resource stringArray   Sync only specific resources as GROUP:KIND:NAME. Fields may be blank. This option may be specified repeatedly
-  -l, --selector string        Wait for apps by label
+  -l, --selector string        Wait for apps by label. Supports '=', '==', '!=', in, notin, exists & not exists. Matching apps must satisfy all of the specified label constraints.
       --suspended              Wait for suspended
       --sync                   Wait for sync
       --timeout uint           Time out after this many seconds
