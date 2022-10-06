@@ -17,6 +17,10 @@ argocd app sync [APPNAME... | -l selector | --project project-name] [flags]
 
   # Sync apps by label, in this example we sync apps that are children of another app (aka app-of-apps)
   argocd app sync -l app.kubernetes.io/instance=my-app
+  argocd app sync -l app.kubernetes.io/instance!=my-app
+  argocd app sync -l app.kubernetes.io/instance
+  argocd app sync -l '!app.kubernetes.io/instance'
+  argocd app sync -l 'app.kubernetes.io/instance notin (my-app,other-app)'
 
   # Sync a specific resource
   # Resource should be formatted as GROUP:KIND:NAME. If no GROUP is specified then :KIND:NAME

@@ -16,7 +16,11 @@ argocd app wait [APPNAME.. | -l selector] [flags]
   argocd app wait my-app other-app
 
   # Wait for apps by label, in this example we waiting for apps that are children of another app (aka app-of-apps)
-  argocd app wait -l app.kubernetes.io/instance=apps
+  argocd app wait -l app.kubernetes.io/instance=my-app
+  argocd app wait -l app.kubernetes.io/instance!=my-app
+  argocd app wait -l app.kubernetes.io/instance
+  argocd app wait -l '!app.kubernetes.io/instance'
+  argocd app wait -l 'app.kubernetes.io/instance notin (my-app,other-app)'
 ```
 
 ### Options
