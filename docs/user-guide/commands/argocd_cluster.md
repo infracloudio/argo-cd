@@ -21,6 +21,9 @@ argocd cluster [flags]
   # Remove a target cluster context from ArgoCD
   argocd cluster rm example-cluster
 
+  # Edit a target cluster context from ArgoCD
+  argocd cluster edit cluster-name --name new-cluster-name --namespaces all
+  argocd cluster edit cluster-name --name new-cluster-name --namespaces namespace-one,namespace-two
 ```
 
 ### Options
@@ -74,6 +77,7 @@ argocd cluster [flags]
 
 * [argocd](argocd.md)	 - argocd controls a Argo CD server
 * [argocd cluster add](argocd_cluster_add.md)	 - argocd cluster add CONTEXT
+* [argocd cluster edit](argocd_cluster_edit.md)	 - Edit cluster information
 * [argocd cluster get](argocd_cluster_get.md)	 - Get cluster information
 * [argocd cluster list](argocd_cluster_list.md)	 - List configured clusters
 * [argocd cluster rm](argocd_cluster_rm.md)	 - Remove cluster credentials

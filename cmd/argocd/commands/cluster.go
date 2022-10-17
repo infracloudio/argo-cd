@@ -27,6 +27,17 @@ import (
 	"github.com/argoproj/argo-cd/v2/util/text/label"
 )
 
+const (
+	// type of the cluster ID is 'name'
+	clusterIdTypeName = "name"
+	// cluster field is 'name'
+	clusterFieldName = "name"
+	// cluster field is 'namespaces'
+	clusterFieldNamespaces = "namespaces"
+	// indicates managing all namespaces
+	allNamespaces = "all"
+)
+
 // NewClusterCommand returns a new instance of an `argocd cluster` command
 func NewClusterCommand(clientOpts *argocdclient.ClientOptions, pathOpts *clientcmd.PathOptions) *cobra.Command {
 	var command = &cobra.Command{
@@ -47,7 +58,10 @@ func NewClusterCommand(clientOpts *argocdclient.ClientOptions, pathOpts *clientc
 
   # Remove a target cluster context from ArgoCD
   argocd cluster rm example-cluster
-`,
+
+  # Edit a target cluster context from ArgoCD
+  argocd cluster edit cluster-name --name new-cluster-name --namespaces all
+  argocd cluster edit cluster-name --name new-cluster-name --namespaces namespace-one,namespace-two`,
 	}
 
 	command.AddCommand(NewClusterAddCommand(clientOpts, pathOpts))
@@ -55,6 +69,7 @@ func NewClusterCommand(clientOpts *argocdclient.ClientOptions, pathOpts *clientc
 	command.AddCommand(NewClusterListCommand(clientOpts))
 	command.AddCommand(NewClusterRemoveCommand(clientOpts, pathOpts))
 	command.AddCommand(NewClusterRotateAuthCommand(clientOpts))
+	command.AddCommand(NewClusterEditCommand(clientOpts))
 	return command
 }
 
@@ -183,6 +198,72 @@ func getRestConfig(pathOpts *clientcmd.PathOptions, ctxName string) (*rest.Confi
 	}
 
 	return conf, nil
+}
+
+// NewClusterEditCommand returns a new instance of an `argocd cluster edit` command
+func NewClusterEditCommand(clientOpts *argocdclient.ClientOptions) *cobra.Command {
+	var (
+		clusterOptions cmdutil.ClusterOptions
+		clusterName    string
+	)
+	var command = &cobra.Command{
+		Use:   "edit NAME",
+		Short: "Edit cluster information",
+		Example: `  # Edit cluster information
+  argocd cluster edit cluster-name --name new-cluster-name --namespaces all
+  argocd cluster edit cluster-name --name new-cluster-name --namespaces namespace-one,namespace-two`,
+		Run: func(c *cobra.Command, args []string) {
+			ctx := c.Context()
+			if len(args) != 1 {
+				c.HelpFunc()(c, args)
+				os.Exit(1)
+			}
+			// name of the cluster whose fields have to be edited.
+			clusterName = args[0]
+			conn, clusterIf := headless.NewClientOrDie(clientOpts, c).NewClusterClientOrDie()
+			defer io.Close(conn)
+			// checks the fields that needs to be edited
+			updatedFields := checkFieldsToUpdate(clusterOptions)
+			namespaces := clusterOptions.Namespaces
+			// check if all namespaces have to be considered
+			if len(namespaces) == 1 && strings.EqualFold(namespaces[0], allNamespaces) {
+				namespaces[0] = ""
+			}
+			if updatedFields != nil {
+				clusterUpdateRequest := clusterpkg.ClusterUpdateRequest{
+					Cluster: &argoappv1.Cluster{
+						Name:       clusterOptions.Name,
+						Namespaces: namespaces,
+					},
+					UpdatedFields: updatedFields,
+					Id: &clusterpkg.ClusterID{
+						Type:  clusterIdTypeName,
+						Value: clusterName,
+					},
+				}
+				_, err := clusterIf.Update(ctx, &clusterUpdateRequest)
+				errors.CheckError(err)
+				fmt.Printf("Cluster '%s' edited.\n", clusterName)
+			} else {
+				fmt.Print("Specify the cluster field to be edited.\n")
+			}
+		},
+	}
+	command.Flags().StringVar(&clusterOptions.Name, "name", "", "Overwrite the cluster name")
+	command.Flags().StringArrayVar(&clusterOptions.Namespaces, "namespaces", nil, "List of namespaces which are allowed to manage. Specify 'all' to manage all namespaces")
+	return command
+}
+
+// checkFieldsToUpdate returns the fields that needs to be edited
+func checkFieldsToUpdate(clusterOptions cmdutil.ClusterOptions) []string {
+	var updatedFields []string
+	if clusterOptions.Name != "" {
+		updatedFields = append(updatedFields, clusterFieldName)
+	}
+	if clusterOptions.Namespaces != nil {
+		updatedFields = append(updatedFields, clusterFieldNamespaces)
+	}
+	return updatedFields
 }
 
 // NewClusterGetCommand returns a new instance of an `argocd cluster get` command
