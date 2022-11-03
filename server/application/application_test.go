@@ -488,6 +488,44 @@ func TestCreateAppWithDestName(t *testing.T) {
 	assert.Equal(t, app.Spec.Destination.Server, "https://cluster-api.com")
 }
 
+func TestCreateAppShouldTruncateLabelIfTheLabelLengthIsGreaterThanSpecifiedLength(t *testing.T) {
+	testApp := newTestApp(setLongName)
+	appServer := newTestAppServer()
+	testApp.Spec.Project = ""
+	createReq := application.ApplicationCreateRequest{
+		Application: testApp,
+	}
+	app, err := appServer.Create(context.Background(), &createReq)
+	assert.NoError(t, err)
+	assert.NotNil(t, app)
+	assert.NotNil(t, app.Spec)
+	assert.Equal(t, app.Spec.Project, "default")
+	assert.Equal(t, app.Name, "abcdefghijklmnopqrstuvwxyz1234567890zyxwvutsrqponmlkjihgfedcba1")
+}
+
+func setLongName(app *appsv1.Application) {
+	app.ObjectMeta.Name = "abcdefghijklmnopqrstuvwxyz1234567890zyxwvutsrqponmlkjihgfedcba1234567890"
+}
+
+func TestCreateAppShouldNotTruncateLabelIfLabelLengthIsLessThanSpecifiedLength(t *testing.T) {
+	testApp := newTestApp(setShortName)
+	appServer := newTestAppServer()
+	testApp.Spec.Project = ""
+	createReq := application.ApplicationCreateRequest{
+		Application: testApp,
+	}
+	app, err := appServer.Create(context.Background(), &createReq)
+	assert.NoError(t, err)
+	assert.NotNil(t, app)
+	assert.NotNil(t, app.Spec)
+	assert.Equal(t, app.Spec.Project, "default")
+	assert.Equal(t, app.Name, "abcdefgh")
+}
+
+func setShortName(app *appsv1.Application) {
+	app.ObjectMeta.Name = "abcdefgh"
+}
+
 func TestUpdateApp(t *testing.T) {
 	testApp := newTestApp()
 	appServer := newTestAppServer(testApp)

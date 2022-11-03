@@ -765,7 +765,7 @@ func ErrProjectNotPermitted(appName, appNamespace, projName string) error {
 	return fmt.Errorf("application '%s' in namespace '%s' is not permitted to use project '%s'", appName, appNamespace, projName)
 }
 
-// TruncateLabelName truncates a label name to a maximum length of 63 characters.
+// TruncateLabelName truncates a label name to a maximum length of characters specified in validation.LabelValueMaxLength
 func TruncateLabelName(name string) string {
 	if len(name) > validation.LabelValueMaxLength {
 		return name[:validation.LabelValueMaxLength]
