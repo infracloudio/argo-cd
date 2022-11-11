@@ -125,6 +125,8 @@ const (
 	// LabelKeyAppInstance is the label key to use to uniquely identify the instance of an application
 	// The Argo CD application name is used as the instance name
 	LabelKeyAppInstance = "app.kubernetes.io/instance"
+	// The name of the kubernetes application
+	LabelKeyAppName = "app.kubernetes.io/name"
 	// LabelKeyLegacyApplicationName is the legacy label (v0.10 and below) and is superseded by 'app.kubernetes.io/instance'
 	LabelKeyLegacyApplicationName = "applications.argoproj.io/app-name"
 	// LabelKeySecretType contains the type of argocd secret (currently: 'cluster', 'repository', 'repo-config' or 'repo-creds')

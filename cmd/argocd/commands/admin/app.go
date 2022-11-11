@@ -20,9 +20,11 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 
 	cmdutil "github.com/argoproj/argo-cd/v2/cmd/util"
+	"github.com/argoproj/argo-cd/v2/common"
 	"github.com/argoproj/argo-cd/v2/controller"
 	"github.com/argoproj/argo-cd/v2/controller/cache"
 	"github.com/argoproj/argo-cd/v2/controller/metrics"
+	argocdapiclient "github.com/argoproj/argo-cd/v2/pkg/apiclient"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	appclientset "github.com/argoproj/argo-cd/v2/pkg/client/clientset/versioned"
 	appinformers "github.com/argoproj/argo-cd/v2/pkg/client/informers/externalversions"
@@ -39,7 +41,7 @@ import (
 	"github.com/argoproj/argo-cd/v2/util/settings"
 )
 
-func NewAppCommand() *cobra.Command {
+func NewAppCommand(clientOpts *argocdapiclient.ClientOptions) *cobra.Command {
 	var command = &cobra.Command{
 		Use:   "app",
 		Short: "Manage applications configuration",
@@ -49,7 +51,7 @@ func NewAppCommand() *cobra.Command {
 	}
 
 	command.AddCommand(NewGenAppSpecCommand())
-	command.AddCommand(NewReconcileCommand())
+	command.AddCommand(NewReconcileCommand(clientOpts))
 	command.AddCommand(NewDiffReconcileResults())
 	return command
 }
@@ -224,7 +226,7 @@ func diffReconcileResults(res1 reconcileResults, res2 reconcileResults) error {
 	return nil
 }
 
-func NewReconcileCommand() *cobra.Command {
+func NewReconcileCommand(clientOpts *argocdapiclient.ClientOptions) *cobra.Command {
 	var (
 		clientConfig      clientcmd.ClientConfig
 		selector          string
@@ -259,7 +261,8 @@ func NewReconcileCommand() *cobra.Command {
 				if repoServerAddress == "" {
 					printLine("Repo server is not provided, trying to port-forward to argocd-repo-server pod.")
 					overrides := clientcmd.ConfigOverrides{}
-					repoServerPort, err := kubeutil.PortForward(8081, namespace, &overrides, "app.kubernetes.io/name=argocd-repo-server")
+					repoServerPodLabelSelector := common.LabelKeyAppName + "=" + clientOpts.RepoServerName
+					repoServerPort, err := kubeutil.PortForward(8081, namespace, &overrides, repoServerPodLabelSelector)
 					errors.CheckError(err)
 					repoServerAddress = fmt.Sprintf("localhost:%d", repoServerPort)
 				}
