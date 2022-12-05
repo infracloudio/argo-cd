@@ -10,6 +10,7 @@ import (
 	argocdclient "github.com/argoproj/argo-cd/v2/pkg/apiclient"
 	"github.com/argoproj/argo-cd/v2/util/cli"
 	"github.com/argoproj/argo-cd/v2/util/config"
+	"github.com/argoproj/argo-cd/v2/util/env"
 	"github.com/argoproj/argo-cd/v2/util/errors"
 	"github.com/argoproj/argo-cd/v2/util/localconfig"
 )
@@ -55,7 +56,7 @@ func NewCommand() *cobra.Command {
 	command.AddCommand(NewLogoutCommand(&clientOpts))
 	command.AddCommand(initialize.InitCommand(NewCertCommand(&clientOpts)))
 	command.AddCommand(initialize.InitCommand(NewGPGCommand(&clientOpts)))
-	command.AddCommand(admin.NewAdminCommand())
+	command.AddCommand(admin.NewAdminCommand(&clientOpts))
 
 	defaultLocalConfigPath, err := localconfig.DefaultLocalConfigPath()
 	errors.CheckError(err)
@@ -76,6 +77,11 @@ func NewCommand() *cobra.Command {
 	command.PersistentFlags().StringVar(&clientOpts.PortForwardNamespace, "port-forward-namespace", config.GetFlag("port-forward-namespace", ""), "Namespace name which should be used for port forwarding")
 	command.PersistentFlags().IntVar(&clientOpts.HttpRetryMax, "http-retry-max", 0, "Maximum number of retries to establish http connection to Argo CD server")
 	command.PersistentFlags().BoolVar(&clientOpts.Core, "core", false, "If set to true then CLI talks directly to Kubernetes instead of talking to Argo CD API server")
+	command.PersistentFlags().StringVar(&clientOpts.ServerName, "server-name", env.StringFromEnv("ARGOCD_SERVER_NAME", "argocd-server"), "Server name")
+	command.PersistentFlags().StringVar(&clientOpts.RedisHaHaProxyName, "redis-ha-haproxy-name", env.StringFromEnv("ARGOCD_REDIS_HA_HAPROXY_NAME", "argocd-redis-ha-haproxy"), "Redis HA HAProxy name")
+	command.PersistentFlags().StringVar(&clientOpts.RedisName, "redis-name", env.StringFromEnv("ARGOCD_REDIS_NAME", "argocd-redis"), "Redis name")
+	command.PersistentFlags().StringVar(&clientOpts.RepoServerName, "repo-server-name", env.StringFromEnv("ARGOCD_REPO_SERVER_NAME", "argocd-repo-server"), "Repo server name")
+	command.PersistentFlags().StringVar(&clientOpts.ApplicationControllerName, "application-controller-name", env.StringFromEnv("ARGOCD_APPLICATION_CONTROLLER_NAME", "argocd-application-controller"), "Application controller name")
 
 	clientOpts.KubeOverrides = &clientcmd.ConfigOverrides{}
 	command.PersistentFlags().StringVar(&clientOpts.KubeOverrides.CurrentContext, "kube-context", "", "Directs the command to the given kube-context")
